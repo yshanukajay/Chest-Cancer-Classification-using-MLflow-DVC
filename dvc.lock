@@ -1,0 +1,113 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python src/chestCNN/pipeline/stage01_data_ingestion.py
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: 3f08f918b3a3da698919385282d63c9f
+      size: 582
+    - path: src/chestCNN/pipeline/stage01_data_ingestion.py
+      hash: md5
+      md5: 1e08b6368e8467b806fcaea2e54e0f3a
+      size: 897
+    outs:
+    - path: artifacts/data_ingestion/Chest-CT-Scan-data
+      hash: md5
+      md5: 904fa45d934ce879b3b1933dca6cb2f1.dir
+      size: 49247431
+      nfiles: 343
+  prepare_base_model:
+    cmd: python src/chestCNN/pipeline/stage02_prepare_base_model.py
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: 3f08f918b3a3da698919385282d63c9f
+      size: 582
+    - path: src/chestCNN/pipeline/stage02_prepare_base_model.py
+      hash: md5
+      md5: 8382f2d36c0d7853992e8c5367d62a65
+      size: 980
+    params:
+      params.yaml:
+        CLASSES: 2
+        IMAGE_SIZE:
+        - 224
+        - 224
+        - 3
+        INCLUDE_TOP: false
+        LEARNING_RATE: 0.01
+        WEIGHTS: imagenet
+    outs:
+    - path: artifacts/prepare_base_model
+      hash: md5
+      md5: a34329233cd8f110716d39236cb2c177.dir
+      size: 118054560
+      nfiles: 2
+  training:
+    cmd: python src/chestCNN/pipeline/stage03_model_trainer.py
+    deps:
+    - path: artifacts/data_ingestion/Chest-CT-Scan-data
+      hash: md5
+      md5: 904fa45d934ce879b3b1933dca6cb2f1.dir
+      size: 49247431
+      nfiles: 343
+    - path: artifacts/prepare_base_model
+      hash: md5
+      md5: a34329233cd8f110716d39236cb2c177.dir
+      size: 118054560
+      nfiles: 2
+    - path: config/config.yaml
+      hash: md5
+      md5: 3f08f918b3a3da698919385282d63c9f
+      size: 582
+    - path: src/chestCNN/pipeline/stage03_model_trainer.py
+      hash: md5
+      md5: 00758e5b84b367d5056d558a589f42b0
+      size: 911
+    params:
+      params.yaml:
+        AUGMENTATION: true
+        BATCH_SIZE: 16
+        EPOCHS: 10
+        IMAGE_SIZE:
+        - 224
+        - 224
+        - 3
+    outs:
+    - path: artifacts/training/model.h5
+      hash: md5
+      md5: fe4ede2607e76c9baf77e288d941267c
+      size: 59337520
+  evaluation:
+    cmd: python src/chestCNN/pipeline/stage04_model_evaluation.py
+    deps:
+    - path: artifacts/data_ingestion/Chest-CT-Scan-data
+      hash: md5
+      md5: 904fa45d934ce879b3b1933dca6cb2f1.dir
+      size: 49247431
+      nfiles: 343
+    - path: artifacts/training/model.h5
+      hash: md5
+      md5: fe4ede2607e76c9baf77e288d941267c
+      size: 59337520
+    - path: config/config.yaml
+      hash: md5
+      md5: 3f08f918b3a3da698919385282d63c9f
+      size: 582
+    - path: src/chestCNN/pipeline/stage04_model_evaluation.py
+      hash: md5
+      md5: dc348a5e1fdd77a80ca1f0cc44e0ff2e
+      size: 922
+    params:
+      params.yaml:
+        BATCH_SIZE: 16
+        IMAGE_SIZE:
+        - 224
+        - 224
+        - 3
+    outs:
+    - path: scores.json
+      hash: md5
+      md5: 3763807e3dd6244a4f3287159078ef2e
+      size: 72
